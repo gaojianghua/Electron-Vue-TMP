@@ -1,5 +1,5 @@
 import router from './index'
-import useStore from '@/store'
+import useStore from '@/render/store'
 // 白名单
 const whiteList = ['/login']
 /**

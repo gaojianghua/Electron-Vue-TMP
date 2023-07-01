@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import router from '@/router'
-import { getItem, removeAllItem, setItem } from '@/utils/storage.ts'
+import router from '@/render/router'
+import { getItem, removeAllItem, setItem } from '@/render/utils/storage.ts'
 
 const useUserStore = defineStore('user', {
     state: () => {

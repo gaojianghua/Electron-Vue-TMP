@@ -1,6 +1,6 @@
 //plugins\buildPlugin.ts
 import path from "path";
-import fs from "fs";
+import fs from "fs-extra";
 
 class BuildObj {
     //编译主进程代码
@@ -14,6 +14,7 @@ class BuildObj {
             external: ["electron"],
         });
     }
+
     //为生产环境准备package.json
     preparePackageJson() {
         let pkgJsonPath = path.join(process.cwd(), "package.json");
@@ -22,11 +23,16 @@ class BuildObj {
         localPkgJson.main = "mainEntry.js";
         delete localPkgJson.scripts;
         delete localPkgJson.devDependencies;
-        localPkgJson.devDependencies = { electron: electronConfig };
+        localPkgJson.devDependencies = {electron: electronConfig};
+        //版本号是否正确无关紧要
+        localPkgJson.dependencies["better-sqlite3"] = "*";
+        localPkgJson.dependencies["bindings"] = "*";
+
         let tarJsonPath = path.join(process.cwd(), "dist", "package.json");
         fs.writeFileSync(tarJsonPath, JSON.stringify(localPkgJson));
         fs.mkdirSync(path.join(process.cwd(), "dist/node_modules"));
     }
+
     //使用electron-builder制成安装包
     buildInstaller() {
         let options = {
@@ -48,12 +54,42 @@ class BuildObj {
                     createStartMenuShortcut: true,
                     shortcutName: "ElectronVueTMPDesktop",
                 },
-                publish: [{ provider: "generic", url: "http://localhost:5500/" }],
+                publish: [{provider: "generic", url: "http://localhost:5500/"}],
             },
             project: process.cwd(),
         };
         return require("electron-builder").build(options);
     }
+    async prepareSqlite() {
+        //拷贝better-sqlite3
+        let srcDir = path.join(process.cwd(), `node_modules/better-sqlite3`);
+        let destDir = path.join(process.cwd(), `dist/node_modules/better-sqlite3`);
+        fs.ensureDirSync(destDir);
+        fs.copySync(srcDir, destDir, {
+            filter: (src, dest) => {
+                if (src.endsWith("better-sqlite3") || src.endsWith("build") || src.endsWith("Release") || src.endsWith("better_sqlite3.node")) return true;
+                else if (src.includes("node_modules\\better-sqlite3\\lib")) return true;
+                else return false;
+            },
+        });
+
+        let pkgJson = `{"name": "better-sqlite3","main": "lib/index.js"}`;
+        let pkgJsonPath = path.join(process.cwd(), `dist/node_modules/better-sqlite3/package.json`);
+        fs.writeFileSync(pkgJsonPath, pkgJson);
+        //制作bindings模块
+        let bindingPath = path.join(process.cwd(), `dist/node_modules/bindings/index.js`);
+        fs.ensureFileSync(bindingPath);
+        let bindingsContent = `module.exports = () => {
+            let addonPath = require("path").join(__dirname, '../better-sqlite3/build/Release/better_sqlite3.node');
+            return require(addonPath);
+        };`;
+        fs.writeFileSync(bindingPath, bindingsContent);
+
+        pkgJson = `{"name": "bindings","main": "index.js"}`;
+        pkgJsonPath = path.join(process.cwd(), `dist/node_modules/bindings/package.json`);
+        fs.writeFileSync(pkgJsonPath, pkgJson);
+    }
+
 }
 
 export let buildPlugin = () => {
@@ -64,6 +100,7 @@ export let buildPlugin = () => {
             buildObj.buildMain();
             buildObj.preparePackageJson();
             buildObj.buildInstaller();
+            buildObj.prepareSqlite()
         },
     };
 };

@@ -10,8 +10,8 @@
  */
 // @ts-ignore
 import { createI18n } from "vue-i18n"
-import { getItem } from '@/utils/storage'
-import { LANG } from '@/constants'
+import { getItem } from '@/render/utils/storage'
+import { LANG } from '@/render/constants'
 import en from './module/en'
 import zh from './module/zh'
 

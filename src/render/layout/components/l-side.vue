@@ -11,7 +11,7 @@
     </div>
     <div class="setting position-absolute">
       <div class="menu-item">
-        <img src="@/assets/img/sidebar/set.png"/>
+        <img src="@/render/assets/img/sidebar/set.png"/>
       </div>
     </div>
   </div>

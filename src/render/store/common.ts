@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import {getItem} from "@/utils/storage";
-import {LANG} from "@/constants";
+import {getItem} from "@/render/utils/storage";
+import {LANG} from "@/render/constants";
 const useCommonStore = defineStore('common', {
     state: () => {
         return {
